@@ -18,5 +18,5 @@ A pong game made with x86_64 asm.
 `./bin/out`
 
 ## Controls
-`Arrow Up` - Move upward.
+`Arrow Up` - Move upward.\
 `Arrow Down` - Move downward.
