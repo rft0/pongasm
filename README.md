@@ -12,7 +12,7 @@ A pong game made with x86_64 asm.
 #### For Debian Based Distros:
 `sudo apt install nasm libdevx11`
 #### For Arch Based Distros: 
-`sudo pacman -S nasm libx11`\
+`sudo pacman -S nasm libx11`
 
 `py ./build.py`\
 `./bin/out`
