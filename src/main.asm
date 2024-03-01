@@ -14,8 +14,10 @@ org 0x7C00
 
 %define BALL_HEIGHT 1
 %define BALL_WIDTH 1
-%define BALL_INITIAL_X 64
-%define BALL_INITIAL_Y 16
+
+%define BALL_INITIAL_X 78
+%define BALL_INITIAL_Y 12
+
 %define BALL_VEL_Y 1
 %define BALL_VEL_X 2
 
@@ -33,8 +35,14 @@ section .data
     player_y dw 12
     bot_y dw 16
 
+    player_score dw 0
+    bot_score dw 0
+
     ball_x dw BALL_INITIAL_X
     ball_y dw BALL_INITIAL_Y
+
+    ball_vel_x db BALL_VEL_X
+    ball_vel_y db BALL_VEL_Y
 
 entry:
     mov ax, 0x3
@@ -49,7 +57,6 @@ game_loop:
     mov cx, SCREEN_WIDTH * SCREEN_HEIGHT
     rep stosw
 
-    ; Draw Player
     mov ah, WHITE
     imul di, [player_y], SCREEN_WIDTH * 2
     mov cl, PLAYER_HEIGHT
@@ -58,7 +65,6 @@ game_loop:
         add di, SCREEN_WIDTH * 2
         loop .loop_draw_player
 
-    ; Draw Bot
     imul di, [bot_y], SCREEN_WIDTH * 2
     mov cl, BOT_HEIGHT
     .loop_draw_bot:
@@ -66,17 +72,15 @@ game_loop:
         add di, SCREEN_WIDTH * 2
         loop .loop_draw_bot
 
-    ; Draw Ball
     imul di, [ball_y], SCREEN_WIDTH * 2
     add di, [ball_x]
     stosw
 
     ; Input
     .input_loop:
-        hlt
         mov ah, 1
         int 0x16
-        jz .input_loop
+        jz .calc
 
         xor ah, ah
         int 0x16
@@ -92,35 +96,65 @@ game_loop:
 
         jmp .input_loop
 
-        .move_up:
-            cmp word [player_y], 0
-            jle .input_loop
+    .move_up:
+        cmp word [player_y], 0
+        jle .input_loop
 
-            dec word [player_y]
-            jmp entry
+        dec word [player_y]
+        jmp .calc
 
-        .move_down:
-            cmp word [player_y], SCREEN_HEIGHT - PLAYER_HEIGHT
-            jge .input_loop
+    .move_down:
+        cmp word [player_y], SCREEN_HEIGHT - PLAYER_HEIGHT
+        jge .input_loop
 
-            inc word [player_y]
-            jmp entry
+        inc word [player_y]
+        jmp .calc
 
-        .game_restart:
-            int 0x19
+    .game_restart:
+        int 0x19
 
-    ; Move Ball / Check Collision
-    
+    .calc:        
+        mov bl, [ball_vel_y]
+        add [ball_y], bl
 
-    mov bx, [TIMER_ADDR] ; # of IRQ0 timer ticks since boot [https://wiki.osdev.org/Memory_Map_(x86)]
-    add bx, 2
-    .delay:
-        cmp [TIMER_ADDR], bx
-        jl .delay
+        mov bl, [ball_vel_x]
+        add [ball_x], bl
+        
+        ; Check if ball is touching to the ceiling
+        cmp word [ball_y], 0
+        jle uno_y
+        cmp word [ball_y], SCREEN_HEIGHT
+        jge uno_y
+        
 
-    jmp game_loop
+        imul di, [ball_y], SCREEN_WIDTH * 2
+        add di, [ball_x]
+        stosw
 
-move_cpu:
+
+        jmp delay
+
+    uno_x:
+        neg byte [ball_vel_x]
+
+    uno_y:
+        neg byte [ball_vel_y]
+
+    inc_player:
+        inc word [player_score]
+
+    inc_bot:
+        inc word [bot_score]
+        
+    delay:
+        mov bx, [TIMER_ADDR] ; # of IRQ0 timer ticks since boot [https://wiki.osdev.org/Memory_Map_(x86)]
+        add bx, 2
+        .loop_delay:
+            cmp [TIMER_ADDR], bx
+            jl .loop_delay
+
+
+jmp game_loop
 
 times 510-($-$$) db 0 ; Padding
 dw 0xAA55 ; Signature
