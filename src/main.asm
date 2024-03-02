@@ -8,9 +8,11 @@ org 0x7C00
 
 %define PLAYER_HEIGHT 4
 %define PLAYER_X 4
+%define PLAYER_WIN 0
 
 %define BOT_HEIGHT 4
 %define BOT_X 156
+%define BOT_WIN 1
 
 %define BALL_HEIGHT 1
 %define BALL_WIDTH 1
@@ -19,8 +21,7 @@ org 0x7C00
 %define BALL_INITIAL_Y 12
 
 %define BALL_VEL_Y 1
-%define BALL_VEL_X 2
-
+%define BALL_VEL_X -2
 
 %define KEY_R 0x72
 %define KEY_SPACE 0x20
@@ -32,8 +33,8 @@ org 0x7C00
 %define WHITE 0x0F0 ; This means fg is white and bg is black
 
 section .data
-    player_y dw 12
-    bot_y dw 16
+    player_y dw 13
+    bot_y dw 13
 
     player_score dw 0
     bot_score dw 0
@@ -43,6 +44,8 @@ section .data
 
     ball_vel_x db BALL_VEL_X
     ball_vel_y db BALL_VEL_Y
+
+    won db PLAYER_WIN
 
 entry:
     mov ax, 0x3
@@ -76,8 +79,8 @@ game_loop:
     add di, [ball_x]
     stosw
 
-    ; Input
     .input_loop:
+        hlt
         mov ah, 1
         int 0x16
         jz .calc
@@ -119,36 +122,79 @@ game_loop:
 
         mov bl, [ball_vel_x]
         add [ball_x], bl
-        
-        ; Check if ball is touching to the ceiling
-        cmp word [ball_y], 0
-        jle uno_y
-        cmp word [ball_y], SCREEN_HEIGHT
-        jge uno_y
-        
 
+        cmp word [ball_x], PLAYER_X + 2
+        jle .hit_check_player
+
+        cmp word [ball_x], SCREEN_WIDTH + BOT_X
+        jge .hit_check_bot
+        
+        cmp word [ball_x], 0
+        jle .inc_bot
+
+        cmp word [ball_x], SCREEN_WIDTH * 2
+        jge .inc_player
+
+        cmp word [ball_y], 0
+        jle .uno_y
+        cmp word [ball_y], SCREEN_HEIGHT
+        jge .uno_y
+        
         imul di, [ball_y], SCREEN_WIDTH * 2
         add di, [ball_x]
         stosw
 
-
         jmp delay
 
-    uno_x:
+    .hit_check_player:  ; if (ball_y >= player_y && ball_y <= player_y - PLAYER_HEIGHT)        
+        mov bx, [player_y]
+        cmp bx, [ball_y]
+        jg delay
+        add bx, PLAYER_HEIGHT
+        cmp bx, [ball_y]
+        jl delay
+
+        jmp .uno_x
+
+    .hit_check_bot:
+        mov bx, [bot_y]
+        cmp bx, [ball_y]
+        jg delay
+        add bx, BOT_HEIGHT
+        cmp bx, [ball_y]
+        jl delay
+
+        jmp .uno_x
+
+    .uno_x:
         neg byte [ball_vel_x]
+        jmp delay
 
-    uno_y:
+    .uno_y:
         neg byte [ball_vel_y]
+        jmp delay
 
-    inc_player:
+    ; .uno_xy:
+    ;     neg byte [ball_vel_x]
+    ;     neg byte [ball_vel_y]
+    ;     jmp delay
+
+    .inc_player:
         inc word [player_score]
+        jmp .ball_reset
 
-    inc_bot:
+    .inc_bot:
         inc word [bot_score]
+        jmp .ball_reset
+
+    .ball_reset:
+        mov word [ball_x], BALL_INITIAL_X
+        mov word [ball_y], BALL_INITIAL_Y
         
     delay:
         mov bx, [TIMER_ADDR] ; # of IRQ0 timer ticks since boot [https://wiki.osdev.org/Memory_Map_(x86)]
-        add bx, 2
+        inc bx
+        inc bx
         .loop_delay:
             cmp [TIMER_ADDR], bx
             jl .loop_delay
