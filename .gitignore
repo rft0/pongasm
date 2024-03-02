@@ -2,3 +2,4 @@
 archive
 bin/*
 *.o
+build.py
