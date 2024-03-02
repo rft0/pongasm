@@ -1,21 +1,16 @@
 # Pongasm
-A pong game made with x86_64 asm.
+A 16-bit pong game that lives in your boot sector!
+
+![](https://github.com/rft0/pongasm/blob/main/img/pong.png?raw=true)
 
 ## Requirements
-* libx11-dev
 * nasm
-* 64 bit processor
-* Python 3+ (optional) - for building
+* qemu-i386 (for testing)
+* make (optional)
 
-## Installation
-
-#### For Debian Based Distros:
-`sudo apt install nasm libdevx11`
-#### For Arch Based Distros: 
-`sudo pacman -S nasm libx11`
-
-`py ./build.py`\
-`./bin/out`
+## Building
+For build & run just run `make dev`\ 
+For just building run `make`
 
 ## Controls
 `Arrow Up` - Move upward.\
