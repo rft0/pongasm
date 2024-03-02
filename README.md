@@ -9,8 +9,8 @@ A 16-bit pong game that lives in your boot sector!
 * make (optional)
 
 ## Building
-For build & run just run `make dev`\ 
-For just building run `make`\
+For build & run just run `make dev` \ 
+For just building run `make`
 
 ## Controls
 `w` - Move upward.\
