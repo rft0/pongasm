@@ -8,11 +8,9 @@ org 0x7C00
 
 %define PLAYER_HEIGHT 4
 %define PLAYER_X 4
-%define PLAYER_WIN 0
 
 %define BOT_HEIGHT 4
 %define BOT_X 156
-%define BOT_WIN 1
 
 %define BALL_HEIGHT 1
 %define BALL_WIDTH 1
@@ -29,12 +27,13 @@ org 0x7C00
 %define KEY_S 's'
 
 ; Colors reference (https://wiki.osdev.org/Text_UI)
-%define BLACK 0x0
-%define WHITE 0x0F0 ; This means fg is white and bg is black
+%define BLACK 0x00
+%define GRAY 0x80
+%define WHITE 0xF0
 
 section .data
-    player_y dw 13
-    bot_y dw 13
+    player_y dw 12
+    bot_y dw 12
 
     player_score dw 0
     bot_score dw 0
@@ -45,13 +44,11 @@ section .data
     ball_vel_x db BALL_VEL_X
     ball_vel_y db BALL_VEL_Y
 
-    won db PLAYER_WIN
-
 entry:
     mov ax, 0x3
     int 0x13
 
-    mov ax, VIDEO_MEM_ADDR ; Video memory starts at 0xB8000 for color text mode (0x3)
+    mov ax, VIDEO_MEM_ADDR ; Video memory starts at 0xB8000 for this (0x3) mode
     mov es, ax
 
 game_loop:
@@ -59,6 +56,14 @@ game_loop:
     xor di, di
     mov cx, SCREEN_WIDTH * SCREEN_HEIGHT
     rep stosw
+
+    mov ah, GRAY
+	mov di, 78
+	mov cl, 13
+	.loop_draw_separator:
+		stosw
+		add di, (SCREEN_WIDTH * 2 - 1) * 2
+		loop .loop_draw_separator
 
     mov ah, WHITE
     imul di, [player_y], SCREEN_WIDTH * 2
@@ -128,7 +133,7 @@ game_loop:
 
         cmp word [ball_x], SCREEN_WIDTH + BOT_X
         jge .hit_check_bot
-        
+
         cmp word [ball_x], 0
         jle .inc_bot
 
@@ -174,11 +179,6 @@ game_loop:
         neg byte [ball_vel_y]
         jmp delay
 
-    ; .uno_xy:
-    ;     neg byte [ball_vel_x]
-    ;     neg byte [ball_vel_y]
-    ;     jmp delay
-
     .inc_player:
         inc word [player_score]
         jmp .ball_reset
@@ -190,7 +190,21 @@ game_loop:
     .ball_reset:
         mov word [ball_x], BALL_INITIAL_X
         mov word [ball_y], BALL_INITIAL_Y
-        
+
+        jmp .randomize_vel
+
+    .randomize_vel:
+        xor ah, ah
+        int 0x1A ; Reference for int: (https://stanislavs.org/helppc/int_1a-0.html)
+
+        mov ax, dx
+        xor dx, dx
+        mov cx, 2
+        div cx
+
+        test dx, dx
+        jz .uno_x ; Randomizing for x is enough
+
     delay:
         mov bx, [TIMER_ADDR] ; # of IRQ0 timer ticks since boot [https://wiki.osdev.org/Memory_Map_(x86)]
         inc bx
