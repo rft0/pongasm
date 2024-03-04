@@ -21,11 +21,6 @@ org 0x7C00
 %define BALL_VEL_Y 1
 %define BALL_VEL_X -2
 
-%define KEY_R 0x72
-%define KEY_SPACE 0x20
-%define KEY_W 'w'
-%define KEY_S 's'
-
 ; Colors reference (https://wiki.osdev.org/Text_UI)
 %define BLACK 0x00
 %define GRAY 0x80
@@ -45,6 +40,10 @@ section .data
     ball_vel_y db BALL_VEL_Y
 
 entry:
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
+
     mov ax, 0x3
     int 0x13
 
