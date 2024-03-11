@@ -1,5 +1,5 @@
 # Pongasm
-A 16-bit pong game that lives in your boot sector!
+A 16-bit pong game that lives in boot sector!
 
 ![](https://github.com/rft0/pongasm/blob/main/img/pong.png?raw=true)
 
