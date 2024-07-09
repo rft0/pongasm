@@ -15,7 +15,7 @@ nasm ./src/main.asm -o ./bin/image
 ```
 Run it via
 ```
-qemu-system-i386 -drive format=raw,file="./bin/image
+qemu-system-i386 -drive format=raw,file="./bin/image"
 ```
 
 ### With Make
