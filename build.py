@@ -1,7 +1,6 @@
 import subprocess
 
 SRC_FILES = [
-    "./src/constants.asm",
     "./src/main.asm"
 ]
 
@@ -9,7 +8,6 @@ TARGET_NAME = "out"
 TARGET = f"./bin/{TARGET_NAME}"
 
 objs = []
-
 def asm(src, out):
     objs.append(out)
     subprocess.run(["nasm", "-f", "elf32", src, "-o", out])
